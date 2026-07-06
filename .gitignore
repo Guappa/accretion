@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.local
+.superpowers/
+
+# Playwright visual-test artifacts
+.playwright-mcp/
+*.jpeg
+
+# Internal working materials - never published
+docs/
+CLAUDE.md
