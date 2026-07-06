@@ -324,6 +324,91 @@ button {
   transform: translateY(1px);
 }
 
+#stage-up {
+  position: fixed;
+  inset: 0;
+  /* Above the session report (1) it reveals on Continue, below victory (40) which trumps everything. */
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 3, 15, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+#stage-up.hidden {
+  display: none;
+}
+
+.stage-up-panel {
+  padding: 32px 44px;
+  max-width: 560px;
+  text-align: center;
+  background: linear-gradient(200deg, rgba(251, 191, 36, 0.12), var(--panel-background) 50%);
+  border: 1px solid var(--amber);
+  clip-path: var(--chamfer);
+  filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.35));
+}
+
+.stage-up-kicker {
+  margin: 0 0 6px;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--neon-violet);
+  text-shadow: 0 0 14px rgba(139, 92, 246, 0.6);
+}
+
+.stage-up-name {
+  margin: 0 0 10px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--amber);
+  text-shadow: 0 0 22px rgba(251, 191, 36, 0.7);
+}
+
+.stage-up-line {
+  margin: 0 0 14px;
+  opacity: 0.85;
+}
+
+.stage-up-unlocks {
+  margin: 0 0 26px;
+  font-weight: 600;
+  color: var(--neon-violet);
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+}
+
+.stage-up-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.stage-up-continue {
+  padding: 14px 44px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: #05030f;
+  background: linear-gradient(100deg, var(--amber), #fde68a);
+  border: none;
+  clip-path: var(--chamfer);
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.stage-up-continue:hover {
+  filter: brightness(1.15) saturate(1.15);
+  transform: translateY(-1px);
+}
+
+.stage-up-continue:active {
+  transform: translateY(1px);
+}
+
 #start-menu {
   position: fixed;
   inset: 0;

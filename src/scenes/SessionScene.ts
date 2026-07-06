@@ -21,6 +21,7 @@ import { GravitySystem } from '../game/GravitySystem';
 import { RespawnSystem } from '../game/RespawnSystem';
 import { SessionDirector } from '../game/SessionDirector';
 import { SpawnSystem } from '../game/SpawnSystem';
+import { StageSystem } from '../game/StageSystem';
 import { BuffSystem } from '../game/upgrades/BuffSystem';
 import { deriveStats, type DerivedStats } from '../game/upgrades/StatEngine';
 import {
@@ -131,6 +132,8 @@ export class SessionScene extends Phaser.Scene {
       (tierId) => tierDamageMultiplier(tierId, this.stats),
     );
     this.director = new SessionDirector(this.bus);
+    // Crossing a mass stage ends the session on the spot so the stage-up notice can take over.
+    new StageSystem(this.bus, () => this.gameState.currentMass, () => this.director.endEarly());
     // Chance-based bonus time on manual breaker kills, rolled per kill against the upgrade-derived chance.
     this.bus.on('objectBroken', ({ source }) => {
       if (source === 'breaker' && Math.random() < this.stats.sessionTimeOnKillChance) {

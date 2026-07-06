@@ -14,6 +14,7 @@ import { SaveSystem } from './state/SaveSystem';
 import { createDebugPanel } from './ui/debugPanel';
 import { createHud } from './ui/hud';
 import { createSessionEndOverlay } from './ui/sessionEnd';
+import { createStageUpOverlay } from './ui/stageUp';
 import { createStartMenu } from './ui/startMenu';
 import { createUpgradeTree } from './ui/upgradeTree';
 import { createAudioControls } from './ui/audioControls';
@@ -47,6 +48,7 @@ createSessionEndOverlay(
   () => sessionStats.snapshot(),
   () => gameState.snapshot().mass,
 );
+createStageUpOverlay(bus);
 createStartMenu(bus, () => sessionScene.beginSession(), upgradeTree.open);
 createVictoryOverlay(bus);
 new VictorySystem(

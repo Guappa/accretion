@@ -94,6 +94,29 @@ describe('SessionDirector', () => {
     expect(director.remainingSeconds).toBe(0);
   });
 
+  it('endEarly stops the session and emits sessionEnded exactly once', () => {
+    const bus = new EventBus<GameEvents>();
+    let endedCount = 0;
+    bus.on('sessionEnded', () => endedCount++);
+    const director = new SessionDirector(bus);
+    director.start(60);
+    director.update(10);
+    director.endEarly();
+    // The natural timeout path must not double-fire after an early end.
+    director.endEarly();
+    director.update(999);
+    expect(endedCount).toBe(1);
+    expect(director.running).toBe(false);
+  });
+
+  it('endEarly is a no-op before start', () => {
+    const bus = new EventBus<GameEvents>();
+    let endedCount = 0;
+    bus.on('sessionEnded', () => endedCount++);
+    new SessionDirector(bus).endEarly();
+    expect(endedCount).toBe(0);
+  });
+
   it('caps cumulative bonus time at maxAddedTimeFraction of the duration and reports the applied amount', () => {
     const director = new SessionDirector(new EventBus<GameEvents>());
     director.start(10);

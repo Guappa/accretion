@@ -22,14 +22,24 @@ export class SessionDirector {
     if (!this.active) return;
     this.elapsedSeconds += deltaSeconds;
     if (this.elapsedSeconds >= this.durationSeconds) {
-      this.active = false;
-      this.bus.emit('sessionEnded', null);
+      this.finish();
       return;
     }
     this.bus.emit('sessionTick', {
       remainingSeconds: this.remainingSeconds,
       progress: this.progress,
     });
+  }
+
+  // Stage crossings cut the session short through the same end path as the natural timeout.
+  endEarly(): void {
+    if (!this.active) return;
+    this.finish();
+  }
+
+  private finish(): void {
+    this.active = false;
+    this.bus.emit('sessionEnded', null);
   }
 
   // Returns the seconds actually granted after the per-session cap, so callers report honest numbers.
