@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { UPGRADE_CLUSTERS, UPGRADE_NODE_MAP, UPGRADE_NODES, UPGRADE_TRUNKS, UPGRADE_EXPANSION_SLOTS, UPGRADE_TUNING } from './upgrades';
+import { UPGRADE_CLUSTERS, UPGRADE_NODE_MAP, UPGRADE_NODES, UPGRADE_TRUNKS, UPGRADE_EXPANSION_SLOTS, UPGRADE_TUNING, type UpgradeNode } from './upgrades';
 import { massRequirementForPath } from './stages';
 import { TREE_UI } from './treeUi';
+
+function absoluteCell(node: UpgradeNode): { gx: number; gy: number } {
+  const cluster = UPGRADE_CLUSTERS.find((candidate) => candidate.id === node.clusterId);
+  return { gx: (cluster?.originGx ?? 0) + node.gx, gy: (cluster?.originGy ?? 0) + node.gy };
+}
 
 describe('upgrade tree content invariants', () => {
   it('node ids are unique and the map covers them all', () => {
@@ -20,6 +25,47 @@ describe('upgrade tree content invariants', () => {
     for (const node of UPGRADE_NODES) {
       for (const prerequisite of node.prerequisites) {
         expect(UPGRADE_NODE_MAP.has(prerequisite)).toBe(true);
+      }
+    }
+  });
+
+  it('every non-entry node has at least one orthogonally adjacent prerequisite', () => {
+    // The tree draws prereq edges only, so a gate the player cannot see as a neighboring connection is a bug.
+    for (const node of UPGRADE_NODES) {
+      if (node.prerequisites.length === 0) continue;
+      const cell = absoluteCell(node);
+      const touchesPrerequisite = node.prerequisites.some((id) => {
+        const prerequisite = UPGRADE_NODE_MAP.get(id);
+        if (!prerequisite) return false;
+        const prerequisiteCell = absoluteCell(prerequisite);
+        return Math.abs(cell.gx - prerequisiteCell.gx) + Math.abs(cell.gy - prerequisiteCell.gy) === 1;
+      });
+      expect(touchesPrerequisite, `${node.id} has no orthogonally adjacent prerequisite`).toBe(true);
+    }
+  });
+
+  it('every node is reachable from its path entry nodes via prerequisite edges', () => {
+    // A node whose full prereq set can never be owned would be dead content the tree still renders.
+    const pathIds = new Set(UPGRADE_NODES.map((node) => node.pathId));
+    for (const pathId of pathIds) {
+      const pathNodes = UPGRADE_NODES.filter((node) => node.pathId === pathId);
+      const reachable = new Set(
+        pathNodes.filter((node) => node.prerequisites.length === 0).map((node) => node.id),
+      );
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const node of pathNodes) {
+          if (reachable.has(node.id)) continue;
+          // Purchase requires every prerequisite, so reachability does too.
+          if (node.prerequisites.every((id) => reachable.has(id))) {
+            reachable.add(node.id);
+            grew = true;
+          }
+        }
+      }
+      for (const node of pathNodes) {
+        expect(reachable.has(node.id), `${node.id} is unreachable from its path's entry nodes`).toBe(true);
       }
     }
   });
@@ -182,7 +228,8 @@ describe('upgrade tree content invariants', () => {
     expect(supernova.effects.starDamageFraction).toBeGreaterThan(0);
     const value = UPGRADE_NODE_MAP.get('star.value')!;
     expect(value.placeholder).toBeUndefined();
-    expect(value.prerequisites).toContain('star.unlock');
+    // Star Value gates on its visible neighbor Supernova, not directly on the keystone.
+    expect(value.prerequisites).toContain('star.supernova');
     expect(value.effects.starValueFraction).toBe(1.0);
   });
 

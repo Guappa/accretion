@@ -9,13 +9,10 @@ export const TREE_UI = {
   zoomWheelFactor: 1.1,
   edges: {
     mainWidth: 3,
-    latticeWidth: 2,
     // Opacity ladder: purchased-to-purchased brightest, frontier next, fully locked dimmest but still clearly connected.
     mainLit: 1,
     mainFrontier: 0.85,
     mainDim: 0.6,
-    latticeLit: 0.8,
-    latticeDim: 0.5,
   },
   iconGlyphs: {
     size: '◎',

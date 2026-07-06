@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { UPGRADE_CLUSTERS, UPGRADE_NODES, UPGRADE_NODE_MAP, UPGRADE_TRUNKS } from '../config/upgrades';
 import {
   absoluteGrid,
-  clusterEdges,
   coreSpokes,
   gridToPx,
   prerequisiteEdges,
@@ -93,31 +92,32 @@ describe('prerequisiteEdges', () => {
   });
 });
 
-describe('clusterEdges', () => {
-  it('derives orthogonal adjacency within clusters, deduped', () => {
-    const edges = clusterEdges();
-    const keys = edges.map((edge) => `${edge.from}->${edge.to}`);
-    expect(new Set(keys).size).toBe(keys.length);
-    expect(keys).toContain('hub.tick1->hub.time1');
-    expect(keys).toContain('hub.damage1->hub.time1');
-    expect(keys).toContain('hub.crit1->hub.critDamage1');
-    expect(keys).toContain('hub.critDamage1->hub.damage1');
-    expect(keys).not.toContain('hub.time1->hub.tick1');
-  });
-
-  it('links hub.size1 to its rank II extension now that one exists', () => {
-    // Superseded by task 4: hub.size2 sits north of hub.size1 and prereqs it, so an edge now exists.
-    const edges = clusterEdges();
-    const keys = edges.map((edge) => `${edge.from}->${edge.to}`);
-    expect(keys).toContain('hub.size2->hub.size1');
-  });
-
-  it('never links nodes across clusters', () => {
-    for (const edge of clusterEdges()) {
-      const from = UPGRADE_NODE_MAP.get(edge.from)!;
-      const to = UPGRADE_NODE_MAP.get(edge.to)!;
-      expect(from.clusterId).toBe(to.clusterId);
+// Repurposed from the removed clusterEdges lattice: the tree now draws prereq edges only,
+// so every rendered connection must gate, and mere grid neighbors must not connect.
+describe('rendered connections are real gates', () => {
+  it('draws every prerequisite edge along the grid - endpoints are orthogonally adjacent', () => {
+    for (const edge of prerequisiteEdges()) {
+      const from = absoluteGrid(UPGRADE_NODE_MAP.get(edge.from)!);
+      const to = absoluteGrid(UPGRADE_NODE_MAP.get(edge.to)!);
+      expect(
+        Math.abs(from.gx - to.gx) + Math.abs(from.gy - to.gy),
+        `${edge.from}->${edge.to} would render as a diagonal or long jump`,
+      ).toBe(1);
     }
+  });
+
+  it('adjacent pairs that do not gate each other are no longer connected', () => {
+    // hub.tick1 and hub.time1 touch on the grid but neither unlocks the other; the old lattice drew them joined.
+    const keys = prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`);
+    expect(keys).not.toContain('hub.tick1->hub.time1');
+    expect(keys).not.toContain('hub.time1->hub.tick1');
+    expect(keys).not.toContain('hub.damage1->hub.time1');
+  });
+
+  it('still connects the adjacency pairs that really gate, like crit into crit damage', () => {
+    const keys = prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`);
+    expect(keys).toContain('hub.crit1->hub.critDamage1');
+    expect(keys).toContain('hub.size1->hub.size2');
   });
 });
 

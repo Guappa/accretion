@@ -211,10 +211,11 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'hub.crit1', pathId: 'hub', clusterId: 'hubCore', gx: 0, gy: 1, icon: 'crit', name: 'Crit Chance I', description: '+10% crit chance', prerequisites: [], effects: { critChanceFlat: 0.1 } },
   { id: 'hub.critDamage1', pathId: 'hub', clusterId: 'hubCore', gx: 0, gy: 2, icon: 'critDamage', name: 'Crit Damage I', description: '+50% crit damage', prerequisites: ['hub.crit1'], effects: { critDamageFlat: 0.5 } },
   { id: 'hub.time1', pathId: 'hub', clusterId: 'hubCore', gx: 2, gy: 2, icon: 'time', name: 'Session Time I', description: '+4s session time', prerequisites: [], effects: { sessionSecondsFlat: 4 } },
-  // Rank II: each extends outward from its rank-I node so the lattice edge stays adjacent.
+  // Rank II: each extends outward from its rank-I node so the drawn prereq edge stays one cell long.
   { id: 'hub.size2', pathId: 'hub', clusterId: 'hubCore', gx: 1, gy: -1, icon: 'size', name: 'Breaker Size II', description: '+20% Breaker radius', prerequisites: ['hub.size1'], effects: { breakerRadiusFraction: 0.2 } },
   { id: 'hub.tick2', pathId: 'hub', clusterId: 'hubCore', gx: 3, gy: 1, icon: 'tick', name: 'Tick Rate II', description: '-12% tick interval', prerequisites: ['hub.tick1'], effects: { tickIntervalFraction: -0.12 } },
-  { id: 'hub.damage2', pathId: 'hub', clusterId: 'hubCore', gx: 2, gy: 3, icon: 'damage', name: 'Base Damage II', description: '+5 damage per tick', prerequisites: ['hub.damage1'], effects: { damagePerTickFlat: 5 } },
+  // Damage II sits under Session Time I, not Damage I - the prereq follows the visible chain, so it gates on time1.
+  { id: 'hub.damage2', pathId: 'hub', clusterId: 'hubCore', gx: 2, gy: 3, icon: 'damage', name: 'Base Damage II', description: '+5 damage per tick', prerequisites: ['hub.time1'], effects: { damagePerTickFlat: 5 } },
   { id: 'hub.crit2', pathId: 'hub', clusterId: 'hubCore', gx: 0, gy: 0, icon: 'crit', name: 'Crit Chance II', description: '+10% crit chance', prerequisites: ['hub.crit1'], effects: { critChanceFlat: 0.1 } },
   { id: 'hub.critDamage2', pathId: 'hub', clusterId: 'hubCore', gx: -1, gy: 2, icon: 'critDamage', name: 'Crit Damage II', description: '+50% crit damage', prerequisites: ['hub.critDamage1'], effects: { critDamageFlat: 0.5 } },
   { id: 'hub.time2', pathId: 'hub', clusterId: 'hubCore', gx: 3, gy: 2, icon: 'time', name: 'Session Time II', description: '+4s session time', prerequisites: ['hub.time1'], effects: { sessionSecondsFlat: 4 } },
@@ -228,8 +229,8 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'hub.damage4', pathId: 'hub', clusterId: 'hubCore', gx: 2, gy: 5, icon: 'damage', name: 'Base Damage IV', description: '+12 damage per tick', prerequisites: ['hub.damage3'], effects: { damagePerTickFlat: 12 } },
   { id: 'hub.crit3', pathId: 'hub', clusterId: 'hubCore', gx: -1, gy: 0, icon: 'crit', name: 'Crit Chance III', description: '+10% crit chance', prerequisites: ['hub.crit2'], effects: { critChanceFlat: 0.1 } },
   { id: 'hub.critDamage3', pathId: 'hub', clusterId: 'hubCore', gx: -2, gy: 2, icon: 'critDamage', name: 'Crit Damage III', description: '+50% crit damage', prerequisites: ['hub.critDamage2'], effects: { critDamageFlat: 0.5 } },
-  // Time2's only free neighbor is timeOnKill's cell, so time3 sits next to it instead of time2 - lattice edge is cosmetic, prereq still time2.
-  { id: 'hub.time3', pathId: 'hub', clusterId: 'hubCore', gx: 3, gy: 4, icon: 'time', name: 'Session Time III', description: '+4s session time', prerequisites: ['hub.time2'], effects: { sessionSecondsFlat: 4 } },
+  // Time3 sits under Overtime, so Overtime is its prereq - the connection a player sees is the one that gates.
+  { id: 'hub.time3', pathId: 'hub', clusterId: 'hubCore', gx: 3, gy: 4, icon: 'time', name: 'Session Time III', description: '+4s session time', prerequisites: ['hub.timeOnKill'], effects: { sessionSecondsFlat: 4 } },
   // Rank IV/V caps: the hub mirrors the reference's deepest families (damage/rate/crit) without filler ranks.
   { id: 'hub.tick4', pathId: 'hub', clusterId: 'hubCore', gx: 3, gy: -1, icon: 'tick', name: 'Tick Rate IV', description: '-12% tick interval', prerequisites: ['hub.tick3'], effects: { tickIntervalFraction: -0.12 } },
   { id: 'hub.damage5', pathId: 'hub', clusterId: 'hubCore', gx: 1, gy: 5, icon: 'damage', name: 'Base Damage V', description: '+18 damage per tick', prerequisites: ['hub.damage4'], effects: { damagePerTickFlat: 18 } },
@@ -258,15 +259,16 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'cl.critDamage1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 2, gy: 2, icon: 'chainCritDamage', name: 'Overload', description: '+50% chain crit damage', prerequisites: ['cl.crit1'], effects: { chainCritDamageFlat: 0.5 } },
   // Keystone extension: a chance for the chain to fork and hit an extra branch.
   { id: 'cl.fork', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: 2, icon: 'fork', name: 'Fork', description: '20% chance the chain forks to an extra target', prerequisites: ['cl.static'], effects: { chainForkChanceFlat: 0.2 }, keystone: true },
-  { id: 'cl.range1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 1, gy: 0, icon: 'range', name: 'Reach I', description: '+35% chain range', prerequisites: ['cl.static'], effects: { chainRangeFraction: 0.35 } },
+  // Reach I is diagonal to the keystone; its visible neighbor is Chain +2, so that is what gates it.
+  { id: 'cl.range1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 1, gy: 0, icon: 'range', name: 'Reach I', description: '+35% chain range', prerequisites: ['cl.chain1'], effects: { chainRangeFraction: 0.35 } },
   { id: 'cl.chain2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: -1, icon: 'chain', name: 'Chain Cascade', description: 'The chain jumps to two more targets', prerequisites: ['cl.chain1'], effects: { chainCountFlat: 2 } },
   { id: 'cl.damage2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 2, gy: 1, icon: 'chainDamage', name: 'Amplitude II', description: '+40% chain damage', prerequisites: ['cl.damage1'], effects: { chainDamageMultFlat: 0.4 } },
   { id: 'cl.crit2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 1, gy: 3, icon: 'chainCrit', name: 'Charged Edge II', description: '+15% chain crit chance', prerequisites: ['cl.crit1'], effects: { chainCritChanceFlat: 0.15 } },
   { id: 'cl.critDamage2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 3, gy: 2, icon: 'chainCritDamage', name: 'Overload II', description: '+50% chain crit damage', prerequisites: ['cl.critDamage1'], effects: { chainCritDamageFlat: 0.5 } },
   { id: 'cl.range2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 2, gy: 0, icon: 'range', name: 'Reach II', description: '+35% chain range', prerequisites: ['cl.range1'], effects: { chainRangeFraction: 0.35 } },
   { id: 'cl.fork2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: 3, icon: 'fork', name: 'Fork II', description: '+20% chance the chain forks to an extra target', prerequisites: ['cl.fork'], effects: { chainForkChanceFlat: 0.2 } },
-  // Electric saturation caps the electric spawn ladder; chain depth caps at seven hops.
-  { id: 'cl.electric2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 2, gy: -1, icon: 'static', name: 'Saturated Charge', description: '+25% electric spawn chance', prerequisites: ['cl.static'], effects: { electricSpawnChanceFlat: 0.25 } },
+  // Electric saturation caps the electric spawn ladder; it caps the Reach arm, so Reach II gates it, not the keystone.
+  { id: 'cl.electric2', pathId: 'chainLightning', clusterId: 'clSpark', gx: 2, gy: -1, icon: 'static', name: 'Saturated Charge', description: '+25% electric spawn chance', prerequisites: ['cl.range2'], effects: { electricSpawnChanceFlat: 0.25 } },
   { id: 'cl.chain3', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: -2, icon: 'chain', name: 'Chain Storm', description: 'The chain jumps to two more targets', prerequisites: ['cl.chain2'], effects: { chainCountFlat: 2 } },
   { id: 'cl.damage3', pathId: 'chainLightning', clusterId: 'clSpark', gx: 3, gy: 1, icon: 'chainDamage', name: 'Amplitude III', description: '+40% chain damage', prerequisites: ['cl.damage2'], effects: { chainDamageMultFlat: 0.4 } },
   // Golden branch is live: any tier can roll golden (takes precedence over electric), then a value multiplier on top.
@@ -278,8 +280,9 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   // Planets open stage 2: the band jump from stage 1 prices is deliberate (the reference's x10 threshold shelves).
   { id: 'planet.unlock', pathId: 'planets', clusterId: 'planets', gx: 0, gy: 0, icon: 'planet', name: 'Unlock Planets', description: 'Your hole can now pull the planet spectrum: dwarf worlds up to ringed gas giants, each tougher and worth far more', prerequisites: [], effects: {}, flags: ['spawnPlanets'], keystone: true },
   { id: 'planet.density', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -1, icon: 'planet', name: 'Planet Density', description: '+50% planet spawn weight', prerequisites: ['planet.unlock'], effects: { planetWeightFraction: 0.5 } },
-  { id: 'planet.value', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -2, icon: 'planet', name: 'Planet Value', description: '+100% matter from planets', prerequisites: ['planet.unlock'], effects: { planetValueFraction: 1.0 } },
-  { id: 'planet.power', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -3, icon: 'planet', name: 'Planetcracker', description: '+75% Breaker damage to planets', prerequisites: ['planet.unlock'], effects: { planetDamageFraction: 0.75 } },
+  // The planets spine runs unlock -> density -> value -> power straight up the column; each rung gates the next it touches.
+  { id: 'planet.value', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -2, icon: 'planet', name: 'Planet Value', description: '+100% matter from planets', prerequisites: ['planet.density'], effects: { planetValueFraction: 1.0 } },
+  { id: 'planet.power', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -3, icon: 'planet', name: 'Planetcracker', description: '+75% Breaker damage to planets', prerequisites: ['planet.value'], effects: { planetDamageFraction: 0.75 } },
   { id: 'planet.density2', pathId: 'planets', clusterId: 'planets', gx: -1, gy: -1, icon: 'planet', name: 'Planet Density II', description: '+50% planet spawn weight', prerequisites: ['planet.density'], effects: { planetWeightFraction: 0.5 } },
   { id: 'planet.value2', pathId: 'planets', clusterId: 'planets', gx: 1, gy: -2, icon: 'planet', name: 'Planet Value II', description: '+100% matter from planets', prerequisites: ['planet.value'], effects: { planetValueFraction: 1.0 } },
   { id: 'planet.power2', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -4, icon: 'planet', name: 'Planetcracker II', description: '+75% Breaker damage to planets', prerequisites: ['planet.power'], effects: { planetDamageFraction: 0.75 } },
@@ -302,14 +305,15 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   // Stars open stage 3: another price shelf on top of the stage 2 band.
   { id: 'star.unlock', pathId: 'stars', clusterId: 'stars', gx: 0, gy: 0, icon: 'star', name: 'Unlock Stars', description: 'Your hole can now pull stars: tougher and worth far more than any planet', prerequisites: [], effects: {}, flags: ['spawnStars'], keystone: true },
   { id: 'star.supernova', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -1, icon: 'star', name: 'Supernova', description: 'Destroyed stars trigger a supernova burst that damages nearby entities', prerequisites: ['star.unlock'], effects: { starDamageFraction: 0.5 }, flags: ['supernova'] },
-  { id: 'star.value', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -2, icon: 'star', name: 'Star Value', description: '+100% matter from stars', prerequisites: ['star.unlock'], effects: { starValueFraction: 1.0 } },
+  // The star-value column climbs through Supernova, so Supernova gates it - the visible rung above unlock.
+  { id: 'star.value', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -2, icon: 'star', name: 'Star Value', description: '+100% matter from stars', prerequisites: ['star.supernova'], effects: { starValueFraction: 1.0 } },
   { id: 'star.density', pathId: 'stars', clusterId: 'stars', gx: 1, gy: 0, icon: 'star', name: 'Star Density', description: '+50% star spawn weight', prerequisites: ['star.unlock'], effects: { starWeightFraction: 0.5 } },
   { id: 'star.power', pathId: 'stars', clusterId: 'stars', gx: 0, gy: 1, icon: 'star', name: 'Starcracker', description: '+75% Breaker damage to stars', prerequisites: ['star.unlock'], effects: { starDamageFraction: 0.75 } },
   { id: 'star.nova', pathId: 'stars', clusterId: 'stars', gx: 1, gy: -1, icon: 'star', name: 'Nova Reach', description: '+50% supernova blast radius', prerequisites: ['star.supernova'], effects: { supernovaRadiusFraction: 0.5 } },
   { id: 'star.value2', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -3, icon: 'star', name: 'Star Value II', description: '+100% matter from stars', prerequisites: ['star.value'], effects: { starValueFraction: 1.0 } },
   { id: 'star.density2', pathId: 'stars', clusterId: 'stars', gx: 2, gy: 0, icon: 'star', name: 'Star Density II', description: '+50% star spawn weight', prerequisites: ['star.density'], effects: { starWeightFraction: 0.5 } },
-  // Power2's prereq is Starcracker; it sits by Density II because Cracker's own neighbors are taken - the lattice edge is cosmetic.
-  { id: 'star.power2', pathId: 'stars', clusterId: 'stars', gx: 2, gy: 1, icon: 'star', name: 'Starcracker II', description: '+75% Breaker damage to stars', prerequisites: ['star.power'], effects: { starDamageFraction: 0.75 } },
+  // Power2 sits by Density II because Cracker's own neighbors are taken, so Density II is the gate a player can see.
+  { id: 'star.power2', pathId: 'stars', clusterId: 'stars', gx: 2, gy: 1, icon: 'star', name: 'Starcracker II', description: '+75% Breaker damage to stars', prerequisites: ['star.density2'], effects: { starDamageFraction: 0.75 } },
   { id: 'star.value3', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -4, icon: 'star', name: 'Star Value III', description: '+100% matter from stars', prerequisites: ['star.value2'], effects: { starValueFraction: 1.0 } },
   // Nebula ladder (predecessor's starSpawnOnKill): a broken star can immediately ignite a replacement star.
   { id: 'star.nebula1', pathId: 'stars', clusterId: 'stars', gx: 1, gy: -2, icon: 'respawn', name: 'Nebula I', description: '25% chance a broken star ignites a new star', prerequisites: ['star.nova'], effects: { starRespawnChanceFlat: 0.25 } },

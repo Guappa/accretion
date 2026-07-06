@@ -71,22 +71,8 @@ export function worldSizePx(bounds: WorldBounds, cellPx: number): { width: numbe
   };
 }
 
-export function clusterEdges(): Array<{ from: string; to: string }> {
-  // Find all orthogonal adjacent pairs within same cluster, deduped by ordering
-  const edges: Array<{ from: string; to: string }> = [];
-  for (const a of UPGRADE_NODES) {
-    for (const b of UPGRADE_NODES) {
-      if (a.clusterId !== b.clusterId) continue;
-      const adjacent = Math.abs(a.gx - b.gx) + Math.abs(a.gy - b.gy) === 1;
-      const ordered = a.gx < b.gx || (a.gx === b.gx && a.gy < b.gy);
-      if (adjacent && ordered) edges.push({ from: a.id, to: b.id });
-    }
-  }
-  return edges;
-}
-
+// The decorative same-cluster adjacency lattice is gone: it drew connections that did not gate, misleading players.
 export function prerequisiteEdges(): Array<{ from: string; to: string }> {
-  // Real dependency edges, drawn heavier than the decorative adjacency lattice.
   const edges: Array<{ from: string; to: string }> = [];
   for (const node of UPGRADE_NODES) {
     for (const prerequisite of node.prerequisites) edges.push({ from: prerequisite, to: node.id });
