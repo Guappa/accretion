@@ -17,6 +17,7 @@ export interface RefillTuning {
 export interface SessionConfig {
   baseDurationSeconds: number;
   baseInitialSpawn: number;
+  maxAddedTimeFraction: number;
   spawnStartInterval: number;
   spawnEndInterval: number;
   spawnRadius: number;
@@ -32,6 +33,8 @@ export const SESSION_CONFIG: SessionConfig = {
   baseDurationSeconds: 25,
   // Sessions open with a populated field; the perf gate holds 3k+ entities so a rich baseline is free.
   baseInitialSpawn: 24,
+  // Bonus time per session (Overtime etc.) caps at half the session's duration, the old game's anti-infinite rule.
+  maxAddedTimeFraction: 0.5,
   spawnStartInterval: 1.1,
   spawnEndInterval: 0.35,
   spawnRadius: 640,

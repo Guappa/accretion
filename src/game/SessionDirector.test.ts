@@ -90,7 +90,22 @@ describe('SessionDirector', () => {
 
   it('addTime is a no-op when not running', () => {
     const director = new SessionDirector(new EventBus<GameEvents>());
-    director.addTime(5);
+    expect(director.addTime(5)).toBe(0);
     expect(director.remainingSeconds).toBe(0);
+  });
+
+  it('caps cumulative bonus time at maxAddedTimeFraction of the duration and reports the applied amount', () => {
+    const director = new SessionDirector(new EventBus<GameEvents>());
+    director.start(10);
+    // Cap is 10 * 0.5 = 5 bonus seconds per session: 3 fits, then only 2 of the next 3, then nothing.
+    director.update(6);
+    expect(director.addTime(3)).toBe(3);
+    director.update(3);
+    expect(director.addTime(3)).toBe(2);
+    director.update(2);
+    expect(director.addTime(3)).toBe(0);
+    // A fresh session resets the bonus budget.
+    director.start(10);
+    expect(director.addTime(3)).toBe(3);
   });
 });

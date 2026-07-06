@@ -134,8 +134,8 @@ export class SessionScene extends Phaser.Scene {
     // Chance-based bonus time on manual breaker kills, rolled per kill against the upgrade-derived chance.
     this.bus.on('objectBroken', ({ source }) => {
       if (source === 'breaker' && Math.random() < this.stats.sessionTimeOnKillChance) {
-        this.director.addTime(UPGRADE_TUNING.sessionTimeOnKillSeconds);
-        this.bus.emit('sessionTimeAdded', { seconds: UPGRADE_TUNING.sessionTimeOnKillSeconds });
+        const applied = this.director.addTime(UPGRADE_TUNING.sessionTimeOnKillSeconds);
+        if (applied > 0) this.bus.emit('sessionTimeAdded', { seconds: applied });
       }
     });
     this.gameRenderer = new Renderer(this);
