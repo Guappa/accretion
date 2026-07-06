@@ -18,6 +18,8 @@ import {
   coreSpokes,
   gridToPx,
   prerequisiteEdges,
+  routeWaypoints,
+  trunkRoute,
   worldBounds,
   worldSizePx,
   zoomAt,
@@ -122,7 +124,12 @@ export function createUpgradeTree(
     for (const trunk of UPGRADE_TRUNKS) {
       const from = UPGRADE_NODE_MAP.get(trunk.from);
       const to = UPGRADE_NODE_MAP.get(trunk.to);
-      if (from && to) addElbow(svg, nodePx(from), nodePx(to), clusterColor(to), from.id, to.id);
+      if (!from || !to) continue;
+      // Drawn trunks follow trunkRoute exactly, the same cells the no-collision invariant certifies.
+      const waypoints = routeWaypoints(trunkRoute(absoluteGrid(from), absoluteGrid(to), trunk.corner)).map(
+        (cell) => gridToPx(cell, TREE_UI.cellPx, bounds),
+      );
+      addPolyline(svg, waypoints, clusterColor(to), from.id, to.id);
     }
     for (const node of UPGRADE_NODES) {
       const button = document.createElement('button');
@@ -191,7 +198,21 @@ export function createUpgradeTree(
     svg.append(line);
   }
 
-  // Orthogonal L-connector (long axis first, then a short perpendicular jog) so far trunks follow the grid instead of crossing diagonally.
+  function addPolyline(
+    svg: SVGSVGElement,
+    points: Array<{ x: number; y: number }>,
+    color: string,
+    fromId: string,
+    toId: string,
+  ): void {
+    const path = document.createElementNS(SVG_NS, 'polyline');
+    path.setAttribute('points', points.map((point) => `${point.x},${point.y}`).join(' '));
+    path.style.fill = 'none';
+    registerEdge(path, color, fromId, toId);
+    svg.append(path);
+  }
+
+  // Orthogonal L-connector (long axis first, then a short perpendicular jog) for expansion-slot teasers, which have no route data.
   function addElbow(
     svg: SVGSVGElement,
     from: { x: number; y: number },
@@ -204,11 +225,7 @@ export function createUpgradeTree(
       Math.abs(to.y - from.y) > Math.abs(to.x - from.x)
         ? { x: from.x, y: to.y }
         : { x: to.x, y: from.y };
-    const path = document.createElementNS(SVG_NS, 'polyline');
-    path.setAttribute('points', `${from.x},${from.y} ${corner.x},${corner.y} ${to.x},${to.y}`);
-    path.style.fill = 'none';
-    registerEdge(path, color, fromId, toId);
-    svg.append(path);
+    addPolyline(svg, [from, corner, to], color, fromId, toId);
   }
 
   function refreshEdges(purchased: ReadonlySet<string>): void {

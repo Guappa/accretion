@@ -194,8 +194,8 @@ export const UPGRADE_CLUSTERS: UpgradeCluster[] = [
   { id: 'clSpark', pathId: 'chainLightning', color: 0x22d3ee, originGx: 5, originGy: 1 },
   // Locked future paths below: visible clusters that tease upcoming mechanics (pull-forward rule), hard-blocked by placeholder.
   { id: 'planets', pathId: 'planets', color: 0x60a5fa, originGx: 2, originGy: -3 },
-  { id: 'stars', pathId: 'stars', color: 0xfbbf24, originGx: 6, originGy: -1 },
-  { id: 'golden', pathId: 'golden', color: 0xffd700, originGx: -2, originGy: 0 },
+  { id: 'stars', pathId: 'stars', color: 0xfbbf24, originGx: 6, originGy: -2 },
+  { id: 'golden', pathId: 'golden', color: 0xffd700, originGx: -3, originGy: 2 },
   { id: 'radioactive', pathId: 'radioactive', color: 0x84cc16, originGx: -3, originGy: 3 },
   { id: 'comet', pathId: 'comet', color: 0xf97316, originGx: -2, originGy: 5 },
   { id: 'laser', pathId: 'laser', color: 0xef4444, originGx: 2, originGy: 7 },
@@ -254,7 +254,7 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'hub.pull2', pathId: 'hub', clusterId: 'hubCore', gx: -2, gy: 0, icon: 'pull', name: 'Gravity Pull II', description: '+20% chance any kill pulls in a fresh entity', prerequisites: ['hub.pull1'], effects: { spawnOnKillChanceFlat: 0.2 } },
   { id: 'hub.pull3', pathId: 'hub', clusterId: 'hubCore', gx: -3, gy: 0, icon: 'pull', name: 'Gravity Pull III', description: '+20% chance any kill pulls in a fresh entity', prerequisites: ['hub.pull2'], effects: { spawnOnKillChanceFlat: 0.2 } },
   // Every branch entry gates on its trunk's hub-side node (UPGRADE_TRUNKS): you unlock your way out to a path.
-  { id: 'cl.static', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: 1, icon: 'static', name: 'Static Charge', description: 'Metal-bearing entities can spawn electric; breaking one fires chain lightning', prerequisites: ['hub.tick1'], effects: { electricSpawnChanceFlat: 0.25, chainCountFlat: 1, chainDamageMultFlat: 0.6 }, flags: ['chainLightning'], keystone: true },
+  { id: 'cl.static', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: 1, icon: 'static', name: 'Static Charge', description: 'Metal-bearing entities can spawn electric; breaking one fires chain lightning', prerequisites: ['hub.tick2'], effects: { electricSpawnChanceFlat: 0.25, chainCountFlat: 1, chainDamageMultFlat: 0.6 }, flags: ['chainLightning'], keystone: true },
   { id: 'cl.chain1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: 0, icon: 'chain', name: 'Chain +2', description: 'The chain jumps to two more targets', prerequisites: ['cl.static'], effects: { chainCountFlat: 2 } },
   { id: 'cl.damage1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 1, gy: 1, icon: 'chainDamage', name: 'Amplitude I', description: '+40% chain damage', prerequisites: ['cl.static'], effects: { chainDamageMultFlat: 0.4 } },
   { id: 'cl.crit1', pathId: 'chainLightning', clusterId: 'clSpark', gx: 1, gy: 2, icon: 'chainCrit', name: 'Charged Edge', description: '+15% chain crit chance', prerequisites: ['cl.damage1'], effects: { chainCritChanceFlat: 0.15 } },
@@ -274,13 +274,13 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'cl.chain3', pathId: 'chainLightning', clusterId: 'clSpark', gx: 0, gy: -2, icon: 'chain', name: 'Chain Storm', description: 'The chain jumps to two more targets', prerequisites: ['cl.chain2'], effects: { chainCountFlat: 2 } },
   { id: 'cl.damage3', pathId: 'chainLightning', clusterId: 'clSpark', gx: 3, gy: 1, icon: 'chainDamage', name: 'Amplitude III', description: '+40% chain damage', prerequisites: ['cl.damage2'], effects: { chainDamageMultFlat: 0.4 } },
   // Golden branch is live: any tier can roll golden (takes precedence over electric), then a value multiplier on top.
-  { id: 'golden.spawn', pathId: 'golden', clusterId: 'golden', gx: 0, gy: 0, icon: 'golden', name: 'Golden Asteroids', description: 'Any entity can spawn golden, a rare high-value affix', prerequisites: ['hub.crit2'], effects: { goldenSpawnChanceFlat: 0.08 }, keystone: true },
+  { id: 'golden.spawn', pathId: 'golden', clusterId: 'golden', gx: 0, gy: 0, icon: 'golden', name: 'Golden Asteroids', description: 'Any entity can spawn golden, a rare high-value affix', prerequisites: ['hub.crit1'], effects: { goldenSpawnChanceFlat: 0.08 }, keystone: true },
   { id: 'golden.value', pathId: 'golden', clusterId: 'golden', gx: 0, gy: -1, icon: 'golden', name: 'Gold Value', description: '+150% matter from golden entities', prerequisites: ['golden.spawn'], effects: { goldenValueFraction: 1.5 } },
   { id: 'golden.spawn2', pathId: 'golden', clusterId: 'golden', gx: -1, gy: 0, icon: 'golden', name: 'Golden Rush', description: '+8% golden spawn chance', prerequisites: ['golden.spawn'], effects: { goldenSpawnChanceFlat: 0.08 } },
   { id: 'golden.value2', pathId: 'golden', clusterId: 'golden', gx: 0, gy: -2, icon: 'golden', name: 'Gold Value II', description: '+100% matter from golden entities', prerequisites: ['golden.value'], effects: { goldenValueFraction: 1.0 } },
   { id: 'golden.value3', pathId: 'golden', clusterId: 'golden', gx: 0, gy: -3, icon: 'golden', name: 'Gold Value III', description: '+100% matter from golden entities', prerequisites: ['golden.value2'], effects: { goldenValueFraction: 1.0 } },
   // Planets open stage 2: the band jump from stage 1 prices is deliberate (the reference's x10 threshold shelves).
-  { id: 'planet.unlock', pathId: 'planets', clusterId: 'planets', gx: 0, gy: 0, icon: 'planet', name: 'Unlock Planets', description: 'Your hole can now pull the planet spectrum: dwarf worlds up to ringed gas giants, each tougher and worth far more', prerequisites: ['hub.size3'], effects: {}, flags: ['spawnPlanets'], keystone: true },
+  { id: 'planet.unlock', pathId: 'planets', clusterId: 'planets', gx: 0, gy: 0, icon: 'planet', name: 'Unlock Planets', description: 'Your hole can now pull the planet spectrum: dwarf worlds up to ringed gas giants, each tougher and worth far more', prerequisites: ['hub.size4'], effects: {}, flags: ['spawnPlanets'], keystone: true },
   { id: 'planet.density', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -1, icon: 'planet', name: 'Planet Density', description: '+50% planet spawn weight', prerequisites: ['planet.unlock'], effects: { planetWeightFraction: 0.5 } },
   // The planets spine runs unlock -> density -> value -> power straight up the column; each rung gates the next it touches.
   { id: 'planet.value', pathId: 'planets', clusterId: 'planets', gx: 0, gy: -2, icon: 'planet', name: 'Planet Value', description: '+100% matter from planets', prerequisites: ['planet.density'], effects: { planetValueFraction: 1.0 } },
@@ -294,18 +294,18 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'planet.fission1', pathId: 'planets', clusterId: 'planets', gx: 1, gy: -1, icon: 'respawn', name: 'Fission I', description: '25% chance a broken planet spawns a new planet', prerequisites: ['planet.density'], effects: { planetRespawnChanceFlat: 0.25 } },
   { id: 'planet.fission2', pathId: 'planets', clusterId: 'planets', gx: 1, gy: 0, icon: 'respawn', name: 'Fission II', description: '+25% chance a broken planet spawns a new planet', prerequisites: ['planet.fission1'], effects: { planetRespawnChanceFlat: 0.25 } },
   // Radioactive branch is live: any entity can roll radioactive; breaking one leaves a fallout zone that DoTs nearby entities.
-  { id: 'radioactive.spawn', pathId: 'radioactive', clusterId: 'radioactive', gx: 0, gy: 0, icon: 'radioactive', name: 'Radioactive Spawns', description: 'Entities can spawn radioactive; breaking one leaves a fallout zone that deals damage over time nearby', prerequisites: ['hub.critDamage2'], effects: { radioactiveSpawnChanceFlat: 0.06 }, keystone: true },
+  { id: 'radioactive.spawn', pathId: 'radioactive', clusterId: 'radioactive', gx: 0, gy: 0, icon: 'radioactive', name: 'Radioactive Spawns', description: 'Entities can spawn radioactive; breaking one leaves a fallout zone that deals damage over time nearby', prerequisites: ['hub.critDamage4'], effects: { radioactiveSpawnChanceFlat: 0.06 }, keystone: true },
   { id: 'radioactive.dot', pathId: 'radioactive', clusterId: 'radioactive', gx: -1, gy: 0, icon: 'radioactive', name: 'Fallout DoT', description: '+100% fallout damage', prerequisites: ['radioactive.spawn'], effects: { radioactiveDotFraction: 1.0 } },
   { id: 'radioactive.spawn2', pathId: 'radioactive', clusterId: 'radioactive', gx: 0, gy: 1, icon: 'radioactive', name: 'Fallout Zones', description: '+6% radioactive spawn chance', prerequisites: ['radioactive.spawn'], effects: { radioactiveSpawnChanceFlat: 0.06 } },
   { id: 'radioactive.dot2', pathId: 'radioactive', clusterId: 'radioactive', gx: -2, gy: 0, icon: 'radioactive', name: 'Fallout DoT II', description: '+100% fallout damage', prerequisites: ['radioactive.dot'], effects: { radioactiveDotFraction: 1.0 } },
   { id: 'radioactive.dot3', pathId: 'radioactive', clusterId: 'radioactive', gx: -3, gy: 0, icon: 'radioactive', name: 'Fallout DoT III', description: '+100% fallout damage', prerequisites: ['radioactive.dot2'], effects: { radioactiveDotFraction: 1.0 } },
   // Comet branch is live: a mass-free keystone unlocks periodic flybys (no direct income effect - a luxury/timing node), then a shower-chance spur.
-  { id: 'comet.flyby', pathId: 'comet', clusterId: 'comet', gx: 0, gy: 0, icon: 'comet', name: 'Comet Flybys', description: 'Comets periodically streak through, offering a bonus if destroyed in time', prerequisites: ['hub.crit1'], effects: {}, flags: ['comets'], keystone: true },
+  { id: 'comet.flyby', pathId: 'comet', clusterId: 'comet', gx: 0, gy: 0, icon: 'comet', name: 'Comet Flybys', description: 'Comets periodically streak through, offering a bonus if destroyed in time', prerequisites: ['hub.critDamage3'], effects: {}, flags: ['comets'], keystone: true },
   { id: 'comet.shower', pathId: 'comet', clusterId: 'comet', gx: -1, gy: 0, icon: 'comet', name: 'Comet Shower', description: 'A chance for a flyby to become a full comet shower', prerequisites: ['comet.flyby'], effects: { cometShowerChanceFlat: 0.25 } },
   { id: 'comet.shower2', pathId: 'comet', clusterId: 'comet', gx: -2, gy: 0, icon: 'comet', name: 'Comet Shower II', description: '+25% additional chance a flyby becomes a shower', prerequisites: ['comet.shower'], effects: { cometShowerChanceFlat: 0.25 } },
   { id: 'comet.shower3', pathId: 'comet', clusterId: 'comet', gx: -3, gy: 0, icon: 'comet', name: 'Comet Shower III', description: '+25% additional chance a flyby becomes a shower', prerequisites: ['comet.shower2'], effects: { cometShowerChanceFlat: 0.25 } },
   // Stars open stage 3: another price shelf on top of the stage 2 band.
-  { id: 'star.unlock', pathId: 'stars', clusterId: 'stars', gx: 0, gy: 0, icon: 'star', name: 'Unlock Stars', description: 'Your hole can now pull stars: tougher and worth far more than any planet', prerequisites: ['hub.tick2'], effects: {}, flags: ['spawnStars'], keystone: true },
+  { id: 'star.unlock', pathId: 'stars', clusterId: 'stars', gx: 0, gy: 0, icon: 'star', name: 'Unlock Stars', description: 'Your hole can now pull stars: tougher and worth far more than any planet', prerequisites: ['hub.tick4'], effects: {}, flags: ['spawnStars'], keystone: true },
   { id: 'star.supernova', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -1, icon: 'star', name: 'Supernova', description: 'Destroyed stars trigger a supernova burst that damages nearby entities', prerequisites: ['star.unlock'], effects: { starDamageFraction: 0.5 }, flags: ['supernova'] },
   // The star-value column climbs through Supernova, so Supernova gates it - the visible rung above unlock.
   { id: 'star.value', pathId: 'stars', clusterId: 'stars', gx: 0, gy: -2, icon: 'star', name: 'Star Value', description: '+100% matter from stars', prerequisites: ['star.supernova'], effects: { starValueFraction: 1.0 } },
@@ -321,7 +321,7 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'star.nebula1', pathId: 'stars', clusterId: 'stars', gx: 1, gy: -2, icon: 'respawn', name: 'Nebula I', description: '25% chance a broken star ignites a new star', prerequisites: ['star.nova'], effects: { starRespawnChanceFlat: 0.25 } },
   { id: 'star.nebula2', pathId: 'stars', clusterId: 'stars', gx: 1, gy: -3, icon: 'respawn', name: 'Nebula II', description: '+25% chance a broken star ignites a new star', prerequisites: ['star.nebula1'], effects: { starRespawnChanceFlat: 0.25 } },
   // Laser branch is live: stars can spawn laser-equipped; breaking one fires a single blast across the whole field; spurs scale damage, width, and crits.
-  { id: 'laser.beam', pathId: 'laser', clusterId: 'laser', gx: 0, gy: 0, icon: 'laser', name: 'Star Lasers', description: 'Stars can spawn laser-equipped - breaking one fires a beam across the entire field, damaging everything in its path', prerequisites: ['hub.damage3'], effects: { laserSpawnChanceFlat: 0.35, laserDamageFlat: 6 }, flags: ['laser'], keystone: true },
+  { id: 'laser.beam', pathId: 'laser', clusterId: 'laser', gx: 0, gy: 0, icon: 'laser', name: 'Star Lasers', description: 'Stars can spawn laser-equipped - breaking one fires a beam across the entire field, damaging everything in its path', prerequisites: ['hub.damage5'], effects: { laserSpawnChanceFlat: 0.35, laserDamageFlat: 6 }, flags: ['laser'], keystone: true },
   { id: 'laser.width', pathId: 'laser', clusterId: 'laser', gx: 0, gy: 1, icon: 'laser', name: 'Beam Width', description: 'Widens the blast so it catches more targets', prerequisites: ['laser.beam'], effects: { laserWidthFraction: 0.6 } },
   { id: 'laser.damage2', pathId: 'laser', clusterId: 'laser', gx: -1, gy: 0, icon: 'laser', name: 'Beam Damage', description: '+6 blast damage', prerequisites: ['laser.beam'], effects: { laserDamageFlat: 6 } },
   { id: 'laser.crit', pathId: 'laser', clusterId: 'laser', gx: 1, gy: 0, icon: 'crit', name: 'Focusing Lens', description: '+20% blast crit chance', prerequisites: ['laser.beam'], effects: { laserCritChanceFlat: 0.2 } },
@@ -330,7 +330,7 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'laser.damage3', pathId: 'laser', clusterId: 'laser', gx: -2, gy: 0, icon: 'laser', name: 'Beam Damage II', description: '+9 blast damage', prerequisites: ['laser.damage2'], effects: { laserDamageFlat: 9 } },
   { id: 'laser.width3', pathId: 'laser', clusterId: 'laser', gx: 0, gy: 3, icon: 'laser', name: 'Beam Width III', description: 'The widest possible blast', prerequisites: ['laser.width2'], effects: { laserWidthFraction: 0.5 } },
   // Orbs open stage 4: the endgame band, priced against a fully stacked income.
-  { id: 'orb.spark', pathId: 'orb', clusterId: 'orb', gx: 0, gy: 0, icon: 'orb', name: 'Orbital Spark', description: 'Breaker kills have a chance to launch a bouncing orb that chains between nearby targets', prerequisites: ['hub.timeOnKill'], effects: { orbChanceFlat: 0.2, orbDamageFlat: 6, orbBounceFlat: 2 }, flags: ['orbs'], keystone: true },
+  { id: 'orb.spark', pathId: 'orb', clusterId: 'orb', gx: 0, gy: 0, icon: 'orb', name: 'Orbital Spark', description: 'Breaker kills have a chance to launch a bouncing orb that chains between nearby targets', prerequisites: ['hub.time3'], effects: { orbChanceFlat: 0.2, orbDamageFlat: 6, orbBounceFlat: 2 }, flags: ['orbs'], keystone: true },
   { id: 'orb.chains', pathId: 'orb', clusterId: 'orb', gx: 0, gy: 1, icon: 'orb', name: 'Orb Chains', description: 'Orbs bounce to more targets and hit harder', prerequisites: ['orb.spark'], effects: { orbBounceFlat: 2, orbDamageFlat: 4 } },
   { id: 'orb.chance2', pathId: 'orb', clusterId: 'orb', gx: 1, gy: 0, icon: 'orb', name: 'Orbital Frequency', description: '+15% chance a Breaker kill launches an orb', prerequisites: ['orb.spark'], effects: { orbChanceFlat: 0.15 } },
   { id: 'orb.damage2', pathId: 'orb', clusterId: 'orb', gx: -1, gy: 0, icon: 'orb', name: 'Orb Damage', description: '+6 orb damage', prerequisites: ['orb.spark'], effects: { orbDamageFlat: 6 } },
@@ -340,7 +340,7 @@ export const UPGRADE_NODES: UpgradeNode[] = assignCurvedCosts([
   { id: 'orb.bounce2', pathId: 'orb', clusterId: 'orb', gx: 0, gy: 2, icon: 'orb', name: 'Orb Chains II', description: 'Orbs bounce to 2 more targets', prerequisites: ['orb.chains'], effects: { orbBounceFlat: 2 } },
   { id: 'orb.chance3', pathId: 'orb', clusterId: 'orb', gx: 2, gy: 0, icon: 'orb', name: 'Orbital Frequency II', description: '+15% chance a Breaker kill launches an orb', prerequisites: ['orb.chance2'], effects: { orbChanceFlat: 0.15 } },
   // Moon branch is live: any entity can roll a moon affix; breaking one (Breaker only) captures a satellite that orbits and buffs the Breaker for a duration.
-  { id: 'moon.capture', pathId: 'moon', clusterId: 'moon', gx: 0, gy: 0, icon: 'moon', name: 'Moon Capture', description: 'Entities can spawn with a moon affix; breaking one captures a satellite that orbits and buffs the Breaker', prerequisites: ['hub.time2'], effects: { moonSpawnChanceFlat: 0.05 }, keystone: true },
+  { id: 'moon.capture', pathId: 'moon', clusterId: 'moon', gx: 0, gy: 0, icon: 'moon', name: 'Moon Capture', description: 'Entities can spawn with a moon affix; breaking one captures a satellite that orbits and buffs the Breaker', prerequisites: ['hub.time3'], effects: { moonSpawnChanceFlat: 0.05 }, keystone: true },
   { id: 'moon.duration', pathId: 'moon', clusterId: 'moon', gx: 1, gy: 0, icon: 'moon', name: 'Satellite Duration', description: '+100% captured-satellite duration', prerequisites: ['moon.capture'], effects: { moonDurationFraction: 1.0 } },
   { id: 'moon.capture2', pathId: 'moon', clusterId: 'moon', gx: 0, gy: -1, icon: 'moon', name: 'Moon Capture II', description: '+5% moon spawn chance', prerequisites: ['moon.capture'], effects: { moonSpawnChanceFlat: 0.05 } },
   { id: 'moon.duration2', pathId: 'moon', clusterId: 'moon', gx: 2, gy: 0, icon: 'moon', name: 'Satellite Duration II', description: '+75% captured-satellite duration', prerequisites: ['moon.duration'], effects: { moonDurationFraction: 0.75 } },
@@ -351,9 +351,12 @@ export const UPGRADE_NODE_MAP: ReadonlyMap<string, UpgradeNode> = new Map(
   UPGRADE_NODES.map((node) => [node.id, node]),
 );
 
+export type TrunkCorner = 'horizontal-first' | 'vertical-first';
+
 export interface UpgradeTrunk {
   from: string;
   to: string;
+  corner?: TrunkCorner; // Explicit elbow choice when only one corner clears every node cell.
 }
 
 export interface ExpansionSlot {
@@ -364,17 +367,18 @@ export interface ExpansionSlot {
 }
 
 // Trunks are real gates: each branch entry lists its trunk's from-node as a prerequisite, so the drawn line is the unlock.
+// Every route below (see trunkRoute in src/ui/upgradeTreeLayout.ts) passes through zero other node cells, corners included.
 export const UPGRADE_TRUNKS: UpgradeTrunk[] = [
-  { from: 'hub.tick1', to: 'cl.static' },
+  { from: 'hub.tick2', to: 'cl.static' },
   // Trunks from the hub out to each path cluster, radiating in a distinct compass direction.
-  { from: 'hub.size3', to: 'planet.unlock' },
-  { from: 'hub.tick2', to: 'star.unlock' },
-  { from: 'hub.crit2', to: 'golden.spawn' },
-  { from: 'hub.critDamage2', to: 'radioactive.spawn' },
-  { from: 'hub.crit1', to: 'comet.flyby' },
-  { from: 'hub.damage3', to: 'laser.beam' },
-  { from: 'hub.timeOnKill', to: 'orb.spark' },
-  { from: 'hub.time2', to: 'moon.capture' },
+  { from: 'hub.size4', to: 'planet.unlock' },
+  { from: 'hub.tick4', to: 'star.unlock', corner: 'vertical-first' },
+  { from: 'hub.crit1', to: 'golden.spawn' },
+  { from: 'hub.critDamage4', to: 'radioactive.spawn' },
+  { from: 'hub.critDamage3', to: 'comet.flyby', corner: 'vertical-first' },
+  { from: 'hub.damage5', to: 'laser.beam' },
+  { from: 'hub.time3', to: 'orb.spark', corner: 'horizontal-first' },
+  { from: 'hub.time3', to: 'moon.capture', corner: 'horizontal-first' },
 ];
 
 // Empty: every path has shipped, so the lock-square teasers were removed; the type/rendering stay so a future path can add one back.

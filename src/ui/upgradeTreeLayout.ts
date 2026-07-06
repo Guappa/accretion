@@ -3,6 +3,7 @@ import {
   UPGRADE_EXPANSION_SLOTS,
   UPGRADE_NODES,
   UPGRADE_NODE_MAP,
+  type TrunkCorner,
   type UpgradeNode,
 } from '../config/upgrades';
 
@@ -69,6 +70,43 @@ export function worldSizePx(bounds: WorldBounds, cellPx: number): { width: numbe
     width: (bounds.maxGx - bounds.minGx + 2) * cellPx,
     height: (bounds.maxGy - bounds.minGy + 2) * cellPx,
   };
+}
+
+// Single source of truth for a trunk's cells: the drawn line and the no-collision invariant both walk this exact route.
+export function trunkRoute(from: GridPoint, to: GridPoint, corner?: TrunkCorner): GridPoint[] {
+  // Default mirrors the old drawing heuristic: run the long axis first, jog last.
+  const chosen =
+    corner ?? (Math.abs(to.gy - from.gy) > Math.abs(to.gx - from.gx) ? 'vertical-first' : 'horizontal-first');
+  const cells: GridPoint[] = [{ ...from }];
+  const cursor = { ...from };
+  const walk = (axis: 'gx' | 'gy'): void => {
+    const step = Math.sign(to[axis] - cursor[axis]);
+    while (cursor[axis] !== to[axis]) {
+      cursor[axis] += step;
+      cells.push({ ...cursor });
+    }
+  };
+  if (chosen === 'horizontal-first') {
+    walk('gx');
+    walk('gy');
+  } else {
+    walk('gy');
+    walk('gx');
+  }
+  return cells;
+}
+
+// Endpoints plus every bend, so a route renders as the minimal polyline through its cells.
+export function routeWaypoints(route: GridPoint[]): GridPoint[] {
+  if (route.length < 2) return [...route];
+  const waypoints: GridPoint[] = [route[0]];
+  for (let index = 1; index < route.length - 1; index++) {
+    const entering = { gx: route[index].gx - route[index - 1].gx, gy: route[index].gy - route[index - 1].gy };
+    const leaving = { gx: route[index + 1].gx - route[index].gx, gy: route[index + 1].gy - route[index].gy };
+    if (entering.gx !== leaving.gx || entering.gy !== leaving.gy) waypoints.push(route[index]);
+  }
+  waypoints.push(route[route.length - 1]);
+  return waypoints;
 }
 
 // The decorative same-cluster adjacency lattice is gone: it drew connections that did not gate, misleading players.
