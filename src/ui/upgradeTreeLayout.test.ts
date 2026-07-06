@@ -5,6 +5,8 @@ import {
   coreSpokes,
   gridToPx,
   prerequisiteEdges,
+  routeWaypoints,
+  trunkRoute,
   worldBounds,
   worldSizePx,
   zoomAt,
@@ -129,6 +131,77 @@ describe('rendered connections are real gates', () => {
     const keys = new Set(prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`));
     for (const trunk of UPGRADE_TRUNKS) {
       expect(keys.has(`${trunk.from}->${trunk.to}`), `${trunk.from}->${trunk.to} must gate`).toBe(true);
+    }
+  });
+});
+
+describe('trunkRoute', () => {
+  it('walks a straight route cell by cell, endpoints included', () => {
+    expect(trunkRoute({ gx: 1, gy: 2 }, { gx: -1, gy: 2 })).toEqual([
+      { gx: 1, gy: 2 },
+      { gx: 0, gy: 2 },
+      { gx: -1, gy: 2 },
+    ]);
+  });
+
+  it('honors an explicit corner choice', () => {
+    expect(trunkRoute({ gx: 0, gy: 0 }, { gx: 2, gy: 1 }, 'vertical-first')).toEqual([
+      { gx: 0, gy: 0 },
+      { gx: 0, gy: 1 },
+      { gx: 1, gy: 1 },
+      { gx: 2, gy: 1 },
+    ]);
+    expect(trunkRoute({ gx: 0, gy: 0 }, { gx: 2, gy: 1 }, 'horizontal-first')).toEqual([
+      { gx: 0, gy: 0 },
+      { gx: 1, gy: 0 },
+      { gx: 2, gy: 0 },
+      { gx: 2, gy: 1 },
+    ]);
+  });
+
+  it('defaults to the long axis first, matching the legacy elbow drawing', () => {
+    const route = trunkRoute({ gx: 0, gy: 0 }, { gx: 1, gy: 3 });
+    expect(route[1]).toEqual({ gx: 0, gy: 1 });
+  });
+
+  it('reduces a route to endpoint and bend waypoints for drawing', () => {
+    const route = trunkRoute({ gx: 0, gy: 0 }, { gx: 2, gy: 1 }, 'horizontal-first');
+    expect(routeWaypoints(route)).toEqual([
+      { gx: 0, gy: 0 },
+      { gx: 2, gy: 0 },
+      { gx: 2, gy: 1 },
+    ]);
+    expect(routeWaypoints(trunkRoute({ gx: 3, gy: 2 }, { gx: 3, gy: 4 }))).toEqual([
+      { gx: 3, gy: 2 },
+      { gx: 3, gy: 4 },
+    ]);
+  });
+});
+
+// PERMANENT INVARIANT: a trunk's drawn line must never pass through a node it does not gate.
+// The designer bug this guards against: a route grazing a foreign node reads as "that node gates this path".
+describe('trunk routes avoid every other node', () => {
+  it('no trunk route cell (corners included) is occupied by a third node or the core', () => {
+    const occupied = new Map<string, string>();
+    for (const node of UPGRADE_NODES) {
+      const cell = absoluteGrid(node);
+      occupied.set(`${cell.gx},${cell.gy}`, node.id);
+    }
+    for (const trunk of UPGRADE_TRUNKS) {
+      const from = UPGRADE_NODE_MAP.get(trunk.from)!;
+      const to = UPGRADE_NODE_MAP.get(trunk.to)!;
+      const route = trunkRoute(absoluteGrid(from), absoluteGrid(to), trunk.corner);
+      for (const cell of route.slice(1, -1)) {
+        const blocker = occupied.get(`${cell.gx},${cell.gy}`);
+        expect(
+          blocker,
+          `trunk ${trunk.from}->${trunk.to} passes through ${blocker ?? ''} at (${cell.gx},${cell.gy})`,
+        ).toBeUndefined();
+        expect(
+          cell.gx === CORE.gx && cell.gy === CORE.gy,
+          `trunk ${trunk.from}->${trunk.to} passes through the core cell`,
+        ).toBe(false);
+      }
     }
   });
 });
