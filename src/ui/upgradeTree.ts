@@ -111,7 +111,10 @@ export function createUpgradeTree(
       addLine(svg, corePxPos, nodePx(spoke), '#8b5cf6', null, spoke.id);
     }
     // Only real gates get drawn: prereq edges plus the trunks/spokes below - a visible connection always means "this unlocks that".
+    const trunkPairs = new Set(UPGRADE_TRUNKS.map((trunk) => `${trunk.from}|${trunk.to}`));
     for (const edge of prerequisiteEdges()) {
+      // Trunk-gated entries render as the elbow below, not a straight cross-map line on top of it.
+      if (trunkPairs.has(`${edge.from}|${edge.to}`)) continue;
       const from = UPGRADE_NODE_MAP.get(edge.from);
       const to = UPGRADE_NODE_MAP.get(edge.to);
       if (from && to) addLine(svg, nodePx(from), nodePx(to), clusterColor(to), from.id, to.id);
@@ -332,6 +335,12 @@ export function createUpgradeTree(
     title.textContent = node.name;
     const description = document.createElement('p');
     description.textContent = node.description;
+    // Name the missing gates (e.g. a branch entry's hub node) so the player knows where to unlock toward.
+    const purchased = new Set(gameState.snapshot().purchasedNodes);
+    const missingNames = node.prerequisites
+      .filter((id) => !purchased.has(id))
+      .map((id) => UPGRADE_NODE_MAP.get(id)?.name ?? id)
+      .join(', ');
     const price = document.createElement('p');
     price.className = 'tree-price';
     price.textContent =
@@ -340,7 +349,7 @@ export function createUpgradeTree(
         : check.reason === 'placeholder'
           ? 'Coming soon'
           : check.reason === 'prerequisite'
-            ? `Requires a connected upgrade first · ${formatAmount(cost)} matter`
+            ? `Requires ${missingNames} · ${formatAmount(cost)} matter`
             : check.reason === 'mass'
               ? `Requires ${formatAmount(Math.max(node.massRequirement ?? 0, massRequirementForPath(node.pathId)))} mass · ${formatAmount(cost)} matter`
               : `${formatAmount(cost)} matter`;

@@ -95,8 +95,11 @@ describe('prerequisiteEdges', () => {
 // Repurposed from the removed clusterEdges lattice: the tree now draws prereq edges only,
 // so every rendered connection must gate, and mere grid neighbors must not connect.
 describe('rendered connections are real gates', () => {
-  it('draws every prerequisite edge along the grid - endpoints are orthogonally adjacent', () => {
+  it('draws every prerequisite edge along the grid, except trunk gates which render as elbows', () => {
+    // Branch entries gate on their trunk's hub-side node; that pair renders as the trunk elbow, not a straight line.
+    const trunkPairs = new Set(UPGRADE_TRUNKS.map((trunk) => `${trunk.from}|${trunk.to}`));
     for (const edge of prerequisiteEdges()) {
+      if (trunkPairs.has(`${edge.from}|${edge.to}`)) continue;
       const from = absoluteGrid(UPGRADE_NODE_MAP.get(edge.from)!);
       const to = absoluteGrid(UPGRADE_NODE_MAP.get(edge.to)!);
       expect(
@@ -107,17 +110,26 @@ describe('rendered connections are real gates', () => {
   });
 
   it('adjacent pairs that do not gate each other are no longer connected', () => {
-    // hub.tick1 and hub.time1 touch on the grid but neither unlocks the other; the old lattice drew them joined.
+    // hub.damage1 and hub.time1 touch on the grid but neither unlocks the other; the old lattice drew them joined.
     const keys = prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`);
-    expect(keys).not.toContain('hub.tick1->hub.time1');
-    expect(keys).not.toContain('hub.time1->hub.tick1');
     expect(keys).not.toContain('hub.damage1->hub.time1');
+    expect(keys).not.toContain('hub.time1->hub.damage1');
+    expect(keys).not.toContain('hub.critDamage1->hub.damage1');
   });
 
   it('still connects the adjacency pairs that really gate, like crit into crit damage', () => {
     const keys = prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`);
     expect(keys).toContain('hub.crit1->hub.critDamage1');
     expect(keys).toContain('hub.size1->hub.size2');
+    // Session Time I gained a real gate from its visible neighbor when free-floating roots were closed.
+    expect(keys).toContain('hub.tick1->hub.time1');
+  });
+
+  it('every branch entry keystone is gated by its trunk pair', () => {
+    const keys = new Set(prerequisiteEdges().map((edge) => `${edge.from}->${edge.to}`));
+    for (const trunk of UPGRADE_TRUNKS) {
+      expect(keys.has(`${trunk.from}->${trunk.to}`), `${trunk.from}->${trunk.to} must gate`).toBe(true);
+    }
   });
 });
 
