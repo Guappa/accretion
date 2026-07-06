@@ -19,6 +19,7 @@ import { createStartMenu } from './ui/startMenu';
 import { createUpgradeTree } from './ui/upgradeTree';
 import { createAudioControls } from './ui/audioControls';
 import { createRotatePrompt } from './ui/rotatePrompt';
+import { createVersionBadge } from './ui/versionBadge';
 import { createVictoryOverlay } from './ui/victory';
 
 const bus = new EventBus<GameEvents>();
@@ -38,6 +39,7 @@ const soundEngine = new SoundEngine(new SfxGate(AUDIO.maxConcurrent, AUDIO.atten
 connectSoundSystem(bus, soundEngine);
 createAudioControls(soundEngine);
 createRotatePrompt();
+createVersionBadge();
 
 const sessionStats = new SessionStats(bus);
 const upgradeTree = createUpgradeTree(gameState, soundEngine, bus);
