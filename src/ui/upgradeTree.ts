@@ -15,7 +15,6 @@ import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import {
   absoluteGrid,
-  clusterEdges,
   coreSpokes,
   gridToPx,
   prerequisiteEdges,
@@ -32,7 +31,6 @@ interface EdgeRef {
   element: SVGLineElement | SVGPolylineElement;
   fromId: string | null;
   toId: string;
-  kind: 'main' | 'lattice';
 }
 
 export function createUpgradeTree(
@@ -110,23 +108,16 @@ export function createUpgradeTree(
     world.append(core);
     for (const spoke of coreSpokes(corePoint)) {
       // fromId null: the core is always "lit", so spoke brightness follows the spoke node alone.
-      addLine(svg, corePxPos, nodePx(spoke), '#8b5cf6', 'main', null, spoke.id);
+      addLine(svg, corePxPos, nodePx(spoke), '#8b5cf6', null, spoke.id);
     }
-    const prereqPairs = new Set<string>();
+    // Only real gates get drawn: prereq edges plus the trunks/spokes below - a visible connection always means "this unlocks that".
+    const trunkPairs = new Set(UPGRADE_TRUNKS.map((trunk) => `${trunk.from}|${trunk.to}`));
     for (const edge of prerequisiteEdges()) {
+      // Trunk-gated entries render as the elbow below, not a straight cross-map line on top of it.
+      if (trunkPairs.has(`${edge.from}|${edge.to}`)) continue;
       const from = UPGRADE_NODE_MAP.get(edge.from);
       const to = UPGRADE_NODE_MAP.get(edge.to);
-      if (!from || !to) continue;
-      prereqPairs.add(`${edge.from}|${edge.to}`);
-      prereqPairs.add(`${edge.to}|${edge.from}`);
-      addLine(svg, nodePx(from), nodePx(to), clusterColor(to), 'main', from.id, to.id);
-    }
-    for (const edge of clusterEdges()) {
-      // Skip lattice pairs already drawn as prereq edges so the heavier line stands alone.
-      if (prereqPairs.has(`${edge.from}|${edge.to}`)) continue;
-      const from = UPGRADE_NODE_MAP.get(edge.from);
-      const to = UPGRADE_NODE_MAP.get(edge.to);
-      if (from && to) addLine(svg, nodePx(from), nodePx(to), clusterColor(from), 'lattice', from.id, to.id);
+      if (from && to) addLine(svg, nodePx(from), nodePx(to), clusterColor(to), from.id, to.id);
     }
     for (const trunk of UPGRADE_TRUNKS) {
       const from = UPGRADE_NODE_MAP.get(trunk.from);
@@ -174,14 +165,13 @@ export function createUpgradeTree(
   function registerEdge(
     element: SVGLineElement | SVGPolylineElement,
     color: string,
-    kind: EdgeRef['kind'],
     fromId: string | null,
     toId: string,
   ): void {
     element.style.stroke = color;
-    element.style.strokeOpacity = String(kind === 'main' ? TREE_UI.edges.mainDim : TREE_UI.edges.latticeDim);
-    element.setAttribute('stroke-width', String(kind === 'main' ? TREE_UI.edges.mainWidth : TREE_UI.edges.latticeWidth));
-    edgeRefs.push({ element, fromId, toId, kind });
+    element.style.strokeOpacity = String(TREE_UI.edges.mainDim);
+    element.setAttribute('stroke-width', String(TREE_UI.edges.mainWidth));
+    edgeRefs.push({ element, fromId, toId });
   }
 
   function addLine(
@@ -189,7 +179,6 @@ export function createUpgradeTree(
     from: { x: number; y: number },
     to: { x: number; y: number },
     color: string,
-    kind: EdgeRef['kind'],
     fromId: string | null,
     toId: string,
   ): void {
@@ -198,7 +187,7 @@ export function createUpgradeTree(
     line.setAttribute('y1', String(from.y));
     line.setAttribute('x2', String(to.x));
     line.setAttribute('y2', String(to.y));
-    registerEdge(line, color, kind, fromId, toId);
+    registerEdge(line, color, fromId, toId);
     svg.append(line);
   }
 
@@ -218,7 +207,7 @@ export function createUpgradeTree(
     const path = document.createElementNS(SVG_NS, 'polyline');
     path.setAttribute('points', `${from.x},${from.y} ${corner.x},${corner.y} ${to.x},${to.y}`);
     path.style.fill = 'none';
-    registerEdge(path, color, 'main', fromId, toId);
+    registerEdge(path, color, fromId, toId);
     svg.append(path);
   }
 
@@ -228,15 +217,11 @@ export function createUpgradeTree(
       const fromOwned = edge.fromId === null || purchased.has(edge.fromId);
       const toOwned = purchased.has(edge.toId);
       const opacity =
-        edge.kind === 'lattice'
-          ? fromOwned && toOwned
-            ? TREE_UI.edges.latticeLit
-            : TREE_UI.edges.latticeDim
-          : fromOwned && toOwned
-            ? TREE_UI.edges.mainLit
-            : fromOwned || toOwned
-              ? TREE_UI.edges.mainFrontier
-              : TREE_UI.edges.mainDim;
+        fromOwned && toOwned
+          ? TREE_UI.edges.mainLit
+          : fromOwned || toOwned
+            ? TREE_UI.edges.mainFrontier
+            : TREE_UI.edges.mainDim;
       edge.element.style.strokeOpacity = String(opacity);
     }
   }
@@ -350,6 +335,12 @@ export function createUpgradeTree(
     title.textContent = node.name;
     const description = document.createElement('p');
     description.textContent = node.description;
+    // Name the missing gates (e.g. a branch entry's hub node) so the player knows where to unlock toward.
+    const purchased = new Set(gameState.snapshot().purchasedNodes);
+    const missingNames = node.prerequisites
+      .filter((id) => !purchased.has(id))
+      .map((id) => UPGRADE_NODE_MAP.get(id)?.name ?? id)
+      .join(', ');
     const price = document.createElement('p');
     price.className = 'tree-price';
     price.textContent =
@@ -358,7 +349,7 @@ export function createUpgradeTree(
         : check.reason === 'placeholder'
           ? 'Coming soon'
           : check.reason === 'prerequisite'
-            ? `Requires a connected upgrade first · ${formatAmount(cost)} matter`
+            ? `Requires ${missingNames} · ${formatAmount(cost)} matter`
             : check.reason === 'mass'
               ? `Requires ${formatAmount(Math.max(node.massRequirement ?? 0, massRequirementForPath(node.pathId)))} mass · ${formatAmount(cost)} matter`
               : `${formatAmount(cost)} matter`;

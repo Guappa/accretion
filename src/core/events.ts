@@ -1,4 +1,5 @@
 import type { CelestialAffix, CelestialTierId } from '../config/celestials';
+import type { UpgradePathId } from '../config/upgrades';
 
 export type KillSource = 'breaker' | 'chain' | 'radioactive' | 'supernova' | 'laser' | 'orb';
 
@@ -21,5 +22,6 @@ export interface GameEvents extends Record<string, unknown> {
   sessionTick: { remainingSeconds: number; progress: number };
   sessionTimeAdded: { seconds: number };
   sessionEnded: null;
+  stageAdvanced: { stageId: string; stageName: string; unlockedPaths: UpgradePathId[] };
   victoryAchieved: { mass: number };
 }

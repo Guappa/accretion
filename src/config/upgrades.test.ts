@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { UPGRADE_CLUSTERS, UPGRADE_NODE_MAP, UPGRADE_NODES, UPGRADE_TRUNKS, UPGRADE_EXPANSION_SLOTS, UPGRADE_TUNING } from './upgrades';
+import { UPGRADE_CLUSTERS, UPGRADE_NODE_MAP, UPGRADE_NODES, UPGRADE_TRUNKS, UPGRADE_EXPANSION_SLOTS, UPGRADE_TUNING, type UpgradeNode } from './upgrades';
 import { massRequirementForPath } from './stages';
 import { TREE_UI } from './treeUi';
+
+function absoluteCell(node: UpgradeNode): { gx: number; gy: number } {
+  const cluster = UPGRADE_CLUSTERS.find((candidate) => candidate.id === node.clusterId);
+  return { gx: (cluster?.originGx ?? 0) + node.gx, gy: (cluster?.originGy ?? 0) + node.gy };
+}
 
 describe('upgrade tree content invariants', () => {
   it('node ids are unique and the map covers them all', () => {
@@ -21,6 +26,60 @@ describe('upgrade tree content invariants', () => {
       for (const prerequisite of node.prerequisites) {
         expect(UPGRADE_NODE_MAP.has(prerequisite)).toBe(true);
       }
+    }
+  });
+
+  it('every gated node has a prerequisite that is orthogonally adjacent or trunk-linked', () => {
+    // The tree draws prereq edges and trunk elbows only, so a gate the player cannot see as a drawn connection is a bug.
+    const trunkPairs = new Set(UPGRADE_TRUNKS.map((trunk) => `${trunk.from}|${trunk.to}`));
+    for (const node of UPGRADE_NODES) {
+      if (node.prerequisites.length === 0) continue;
+      const cell = absoluteCell(node);
+      const visiblyConnected = node.prerequisites.some((id) => {
+        if (trunkPairs.has(`${id}|${node.id}`)) return true;
+        const prerequisite = UPGRADE_NODE_MAP.get(id);
+        if (!prerequisite) return false;
+        const prerequisiteCell = absoluteCell(prerequisite);
+        return Math.abs(cell.gx - prerequisiteCell.gx) + Math.abs(cell.gy - prerequisiteCell.gy) === 1;
+      });
+      expect(visiblyConnected, `${node.id} has no adjacent or trunk-linked prerequisite`).toBe(true);
+    }
+  });
+
+  it('branch entry keystones gate on their trunk hub-side node - no path opens for free', () => {
+    // Designer rule: you unlock your way out to a path; the drawn trunk is the gate.
+    for (const trunk of UPGRADE_TRUNKS) {
+      expect(
+        UPGRADE_NODE_MAP.get(trunk.to)!.prerequisites,
+        `${trunk.to} must require ${trunk.from}`,
+      ).toContain(trunk.from);
+    }
+  });
+
+  it('only hub roots touching the core are prerequisite-free, and every node is reachable from them', () => {
+    const roots = UPGRADE_NODES.filter((node) => node.prerequisites.length === 0);
+    for (const root of roots) {
+      const cell = absoluteCell(root);
+      expect(root.pathId, `${root.id} is prerequisite-free but not a hub node`).toBe('hub');
+      const coreDistance = Math.abs(cell.gx - TREE_UI.core.gx) + Math.abs(cell.gy - TREE_UI.core.gy);
+      expect(coreDistance, `${root.id} is prerequisite-free but does not touch the core`).toBe(1);
+    }
+    // A node whose full prereq set can never be owned would be dead content the tree still renders.
+    const reachable = new Set(roots.map((node) => node.id));
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const node of UPGRADE_NODES) {
+        if (reachable.has(node.id)) continue;
+        // Purchase requires every prerequisite, so reachability does too.
+        if (node.prerequisites.every((id) => reachable.has(id))) {
+          reachable.add(node.id);
+          grew = true;
+        }
+      }
+    }
+    for (const node of UPGRADE_NODES) {
+      expect(reachable.has(node.id), `${node.id} is unreachable from the core`).toBe(true);
     }
   });
 
@@ -182,7 +241,8 @@ describe('upgrade tree content invariants', () => {
     expect(supernova.effects.starDamageFraction).toBeGreaterThan(0);
     const value = UPGRADE_NODE_MAP.get('star.value')!;
     expect(value.placeholder).toBeUndefined();
-    expect(value.prerequisites).toContain('star.unlock');
+    // Star Value gates on its visible neighbor Supernova, not directly on the keystone.
+    expect(value.prerequisites).toContain('star.supernova');
     expect(value.effects.starValueFraction).toBe(1.0);
   });
 

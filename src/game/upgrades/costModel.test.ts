@@ -56,43 +56,54 @@ describe('canPurchase', () => {
     expect(canPurchase(chainOne, new Set(), 9999, 0).reason).toBe('prerequisite');
   });
 
+  it('rejects a branch entry whose trunk hub node is not owned', () => {
+    // Designer rule: no path opens for free - the entry keystone gates on its trunk's hub-side node.
+    expect(canPurchase(staticCharge, new Set(), 9999, 0).reason).toBe('prerequisite');
+  });
+
   it('rejects insufficient matter', () => {
-    expect(canPurchase(staticCharge, new Set(), 1, 0).reason).toBe('matter');
+    // Trunk gate owned so the check falls through to the wallet.
+    expect(canPurchase(staticCharge, new Set(['hub.tick1']), 1, 0).reason).toBe('matter');
   });
 
   it('allows a valid purchase', () => {
-    const check = canPurchase(staticCharge, new Set(), staticCharge.baseCost, 0);
+    const check = canPurchase(staticCharge, new Set(['hub.tick1']), staticCharge.baseCost, 0);
     expect(check.allowed).toBe(true);
     expect(check.reason).toBe('ok');
   });
 });
 
 describe('canPurchase stage gating', () => {
+  // Each purchased set owns the entry's trunk hub node so only the mass gate is under test.
   it('blocks a planet node below the intermediate-mass threshold, allows it at the threshold', () => {
-    expect(canPurchase(planetUnlock, new Set(), 9999999, intermediateStage.massThreshold - 1).reason).toBe('mass');
-    expect(canPurchase(planetUnlock, new Set(), 9999999, intermediateStage.massThreshold).allowed).toBe(true);
+    const owned = new Set(['hub.size3']);
+    expect(canPurchase(planetUnlock, owned, 9999999, intermediateStage.massThreshold - 1).reason).toBe('mass');
+    expect(canPurchase(planetUnlock, owned, 9999999, intermediateStage.massThreshold).allowed).toBe(true);
   });
 
   it('blocks star and laser paths below the supermassive threshold', () => {
-    expect(canPurchase(starUnlock, new Set(), 9999999, supermassiveStage.massThreshold - 1).reason).toBe('mass');
-    expect(canPurchase(starUnlock, new Set(), 9999999, supermassiveStage.massThreshold).allowed).toBe(true);
+    const starOwned = new Set(['hub.tick2']);
+    expect(canPurchase(starUnlock, starOwned, 9999999, supermassiveStage.massThreshold - 1).reason).toBe('mass');
+    expect(canPurchase(starUnlock, starOwned, 9999999, supermassiveStage.massThreshold).allowed).toBe(true);
     const laserBeam = UPGRADE_NODE_MAP.get('laser.beam')!;
-    expect(canPurchase(laserBeam, new Set(), 9999999, supermassiveStage.massThreshold - 1).reason).toBe('mass');
-    expect(canPurchase(laserBeam, new Set(), 9999999, supermassiveStage.massThreshold).allowed).toBe(true);
+    const laserOwned = new Set(['hub.damage3']);
+    expect(canPurchase(laserBeam, laserOwned, 9999999, supermassiveStage.massThreshold - 1).reason).toBe('mass');
+    expect(canPurchase(laserBeam, laserOwned, 9999999, supermassiveStage.massThreshold).allowed).toBe(true);
   });
 
   it('blocks the orb path below the galactic-core threshold', () => {
-    expect(canPurchase(orbSpark, new Set(), 9999999, galacticCoreStage.massThreshold - 1).reason).toBe('mass');
-    expect(canPurchase(orbSpark, new Set(), 9999999, galacticCoreStage.massThreshold).allowed).toBe(true);
+    const owned = new Set(['hub.timeOnKill']);
+    expect(canPurchase(orbSpark, owned, 9999999, galacticCoreStage.massThreshold - 1).reason).toBe('mass');
+    expect(canPurchase(orbSpark, owned, 9999999, galacticCoreStage.massThreshold).allowed).toBe(true);
   });
 
   it('the stage gate outranks the matter check - a rich wallet still reads mass-locked', () => {
-    expect(canPurchase(orbSpark, new Set(), 1, 0).reason).toBe('mass');
+    expect(canPurchase(orbSpark, new Set(['hub.timeOnKill']), 1, 0).reason).toBe('mass');
   });
 
   it('stage-1 paths are never mass gated', () => {
-    expect(canPurchase(staticCharge, new Set(), 9999, 0).allowed).toBe(true);
+    expect(canPurchase(staticCharge, new Set(['hub.tick1']), 9999, 0).allowed).toBe(true);
     const goldenSpawn = UPGRADE_NODE_MAP.get('golden.spawn')!;
-    expect(canPurchase(goldenSpawn, new Set(), 9999, 0).allowed).toBe(true);
+    expect(canPurchase(goldenSpawn, new Set(['hub.crit2']), 9999, 0).allowed).toBe(true);
   });
 });
